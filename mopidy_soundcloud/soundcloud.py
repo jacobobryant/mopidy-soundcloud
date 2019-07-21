@@ -191,12 +191,20 @@ class SoundCloudClient(object):
 
     def search(self, query):
         # https://developers.soundcloud.com/docs/api/reference#tracks
-        query = quote_plus(query.encode('utf-8'))
-        search_results = self._get('tracks?q=%s' % query, limit=True)
-        tracks = []
-        for track in search_results:
-            tracks.append(self.parse_track(track, False))
-        return self.sanitize_tracks(tracks)
+        if not isinstance(query, dict):
+            query = quote_plus(query.encode('utf-8'))
+            search_results = self._get('tracks?q=%s' % query, limit=True)
+            tracks = []
+            for track in search_results:
+                tracks.append(self.parse_track(track, False))
+            return self.sanitize_tracks(tracks)
+        else:
+            encoded_artist = quote_plus(query['artist'][0].encode('utf-8'))
+            tracks = [self.parse_track(track, False)
+                      for track in self._get('tracks?q=%s' % encoded_artist, limit=True)
+                      if track['title'] == query['track_name'][0] and
+                         track['user']['username'] == query['artist'][0]]
+            return self.sanitize_tracks(tracks)
 
     def parse_results(self, res):
         tracks = []
@@ -255,10 +263,13 @@ class SoundCloudClient(object):
         album_kwargs = {}
 
         if 'title' in data:
-            label_name = data.get('label_name')
-            if not label_name:
-                label_name = data.get(
-                    'user', {}).get('username', 'Unknown label')
+            try:
+                label_name = data['user']['username']
+            except:
+                label_name = data.get('label_name')
+                if not label_name:
+                    label_name = data.get(
+                        'user', {}).get('username', 'Unknown label')
 
             track_kwargs['name'] = data['title']
             artist_kwargs['name'] = label_name

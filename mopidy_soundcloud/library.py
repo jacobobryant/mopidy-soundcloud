@@ -142,11 +142,12 @@ class SoundCloudLibraryProvider(backend.LibraryProvider):
                     tracks=self.backend.remote.resolve_url(search_query)
                 )
         else:
-            search_query = simplify_search_query(query)
-            logger.info('Searching SoundCloud for: %s', search_query)
+            if not exact:
+                query = simplify_search_query(query)
+                logger.info('Searching SoundCloud for: %s', search_query)
             return SearchResult(
                 uri='soundcloud:search',
-                tracks=self.backend.remote.search(search_query)
+                tracks=self.backend.remote.search(query)
             )
 
     def lookup(self, uri):
