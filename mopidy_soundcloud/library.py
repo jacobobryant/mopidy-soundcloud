@@ -144,7 +144,7 @@ class SoundCloudLibraryProvider(backend.LibraryProvider):
         else:
             if not exact:
                 query = simplify_search_query(query)
-                logger.info('Searching SoundCloud for: %s', search_query)
+                logger.info('Searching SoundCloud for: %s', query)
             return SearchResult(
                 uri='soundcloud:search',
                 tracks=self.backend.remote.search(query)
